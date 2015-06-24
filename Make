@@ -1,0 +1,6 @@
+src/universe_comparator.ml4
+src/universe_comparator.mllib
+theories/universe_comparator.v
+#theories/test.v
+-R theories universe_comparator
+-I src
