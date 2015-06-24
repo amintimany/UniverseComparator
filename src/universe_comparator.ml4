@@ -55,7 +55,47 @@ let u_of_id id =
       user_err_loc (Loc.dummy_loc, "Constraint", str "Undeclared or invalid universe " ++ pr_id id)
   end
 
-let comparator uid1 ord uid2 eq_res le_res lt_res inv_le_res inv_lt_res =
+let uid_to_u uid =
+  if uid = "Set" then
+    begin
+      Univ.Level.set
+    end
+  else
+    begin
+      if uid = "Prop" then
+	begin
+	  Univ.Level.prop
+	end
+      else
+	begin
+	  try
+	    u_of_id (Id.of_string uid)
+	  with
+	    UserError _ as e ->
+	    begin
+	      match u_of_ulit uid with
+	      | Some u -> u
+	      | None -> raise e
+	    end
+	end
+    end
+
+let comparator u1 uid1 ord u2 uid2 univs =
+  let eq_res =
+    Univ.check_constraint univs (u1, Univ.Eq, u2)
+  in
+  let le_res =
+    Univ.check_constraint univs (u1, Univ.Le, u2)
+  in
+  let lt_res =
+    Univ.check_constraint univs (u1, Univ.Lt, u2)
+  in
+  let inv_le_res =
+    Univ.check_constraint univs (u2, Univ.Le, u1)
+  in
+  let inv_lt_res =
+    Univ.check_constraint univs (u2, Univ.Lt, u1)
+  in
   match ord with
   | Some Univ.Lt ->
      begin
@@ -96,32 +136,7 @@ let comparator uid1 ord uid2 eq_res le_res lt_res inv_le_res inv_lt_res =
        | (false, false, false, false, false) -> Pp.msg_info (Pp.str (uid1 ^ " and " ^ uid2 ^ " are not related"))
      end
     
-let compare_universes (uid1, ord, uid2) : unit =
-  let uid_to_u uid =
-    if uid = "Set" then
-      begin
-	Univ.Level.set
-      end
-    else
-      begin
-	if uid = "Prop" then
-	  begin
-	    Univ.Level.prop
-	  end
-	else
-	  begin
-	    try
-	      u_of_id (Id.of_string uid)
-	      with
-		UserError _ as e ->
-		begin
-		  match u_of_ulit uid with
-		  | Some u -> u
-		  | None -> raise e
-		end
-	  end
-      end
-  in
+let compare_universes uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
   in
@@ -131,28 +146,32 @@ let compare_universes (uid1, ord, uid2) : unit =
   let univs =
     universes ()
   in
-  let eq_res =
-    Univ.check_constraint univs (u1, Univ.Eq, u2)
+  comparator u1 uid1 ord u2 uid2 univs
+
+let compare_universes_in id uid1 ord uid2 : unit =
+  let u1 =
+    uid_to_u uid1
   in
-  let le_res =
-    Univ.check_constraint univs (u1, Univ.Le, u2)
+  let u2 =
+    uid_to_u uid2
   in
-  let lt_res =
-    Univ.check_constraint univs (u1, Univ.Lt, u2)
+  let univs =
+    universes ()
   in
-  let inv_le_res =
-    Univ.check_constraint univs (u2, Univ.Le, u1)
-  in
-  let inv_lt_res =
-    Univ.check_constraint univs (u2, Univ.Lt, u1)
-  in
-  comparator uid1 ord uid2 eq_res le_res lt_res inv_le_res inv_lt_res
-       
+  comparator u1 uid1 ord u2 uid2 univs
+	     
 VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
-| [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes (uid1, Some Univ.Lt, uid2) ]
-| [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes (uid2, Some Univ.Lt, uid1) ]
-| [ "Compare" "Universes" string(uid1) "=" string(uid2) ] -> [compare_universes (uid1, Some Univ.Eq, uid2) ]
-| [ "Compare" "Universes" string(uid1) "<=" string(uid2) ] -> [compare_universes (uid1, Some Univ.Le, uid2) ]
-| [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes (uid2, Some Univ.Le, uid1) ]
-| [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes (uid1, None, uid2) ]
+| [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes uid2 (Some Univ.Lt) uid1 ]
+| [ "Compare" "Universes" string(uid1) "=" string(uid2) ] -> [compare_universes uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes" string(uid1) "<=" string(uid2) ] -> [compare_universes uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes uid2 (Some Univ.Le) uid1 ]
+| [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes uid1 None uid2 ]
+							       
+| [ "Compare" "Universes" "In" ident(id) string(uid1) "<" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes" "In" ident(id) string(uid1) ">" string(uid2) ] -> [compare_universes_in id uid2 (Some Univ.Lt) uid1 ]
+| [ "Compare" "Universes" "In" ident(id) string(uid1) "=" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes" "In" ident(id) string(uid1) "<=" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes" "In" ident(id) string(uid1) ">=" string(uid2) ] -> [compare_universes_in id uid2 (Some Univ.Le) uid1 ]
+| [ "Compare" "Universes" "In" ident(id) string(uid1) "?" string(uid2) ] -> [compare_universes_in id uid1 None uid2 ]
 END
