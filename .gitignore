@@ -1,3 +1,16 @@
 *.vo
 *.glob
 *.v.d
+*~
+*#*
+*.d
+*.aux
+*.o
+*.a
+*.
+*.cm[xoias]
+*.cmx[ias]
+Makefile
+src/universe_comparator.ml
+src/universe_comparator_mod.ml
+
