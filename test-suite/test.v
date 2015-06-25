@@ -110,8 +110,8 @@ The following is a table of commands and their outputs:
 
  *)
 
-Compare Universes "x" < "y" of W.
-Compare Universes "x" <= "y" of W.
-Compare Universes "x" = "y" of W.
+Fail Compare Universes "x" < "y" of W.
+Fail Compare Universes "x" <= "y" of W.
+Fail Compare Universes "x" = "y" of W.
 Compare Universes "x" > "y" of W.
 Compare Universes "x" >= "y" of W.
