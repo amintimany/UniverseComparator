@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>test</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library test</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <a class="idref" href="universe_comparator.universe_comparator.html#"><span class="id" title="library">universe_comparator.universe_comparator</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Set Printing Universes</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Universes</span> <span class="id" title="var">i</span> <span class="id" title="var">j</span>.<br/>
+
+<br/>
+<span class="id" title="var">Monomorphic</span> <span class="id" title="keyword">Definition</span> <a name="X"><span class="id" title="definition">X</span></a> : <span class="id" title="var">Type@</span>{<span class="id" title="var">i</span>} := <span class="id" title="var">Type@</span>{<span class="id" title="var">j</span>}.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+Universe variables in X are global (X is not universe polymorphic). Therefore, 'Compare Universes "i" ? "j"' will output 'Inferred relation: i &gt; j'.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "i" ? "j".<br/>
+
+<br/>
+<span class="id" title="var">Polymorphic</span> <span class="id" title="keyword">Definition</span> <a name="PLX"><span class="id" title="definition">PLX</span></a> : <span class="id" title="keyword">Type</span> := <span class="id" title="keyword">Type</span>.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+Universe variables in PLX are local (PLX is universe polymorphic). Therefore, 'Compare Universes "Top.3" ? "Top.4"' will output 'Top.3 and Top.4 are not related'.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "Top.3" ? "Top.4".<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+In this case, one can use 'Compare Universes "Top.3" ? "Top.4" Of PLX' which will output 'Inferred relation: Top.3 &gt; Top.4'
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "Top.3" ? "Top.4" <span class="id" title="var">Of</span> <span class="id" title="var">PLX</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+One can also ask if a particular relation holds within the global or local constraints.
+
+<div class="paragraph"> </div>
+
+Note that universe levels generated internally by Coq, e.g. "Top.3" above, are not fixed and can change. A better way to compare universe levels in a more consistent way is to use declared universe variables, e.g., "x" and "y" below. 
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Universe</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>.<br/>
+
+<br/>
+<span class="id" title="var">Polymorphic</span> <span class="id" title="keyword">Definition</span> <a name="W"><span class="id" title="definition">W</span></a> := <a class="idref" href="test.html#PLX"><span class="id" title="definition">PLX@</span></a>{<span class="id" title="var">x</span> <span class="id" title="var">y</span>}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+Here we have bound universe variables of PLX to "x" and "y" in the context of definition W. Therefore, 'Compare Universes "x" ? "y" Of W' now outputs 'Inferred relation: x &gt; y'.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" ? "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+Compare Universes (acting both globally and locally) can also take into account a relation and check if that relation holds.
+
+<div class="paragraph"> </div>
+
+The following is a table of commands and their outputs:
+
+<div class="paragraph"> </div>
+
+
+<table>
+<tr> <th>Commad</th> <th>Result</th> </tr>
+<tr> <td>Compare Universes "x" < "y" Of W.</td> <td>Doesn't hold because: x > y</td> </tr>
+<tr> <td>Compare Universes "x" <= "y" Of W.</td> <td>Doesn't hold because: x > y</td> </tr>
+<tr> <td>Compare Universes "x" = "y" Of W.</td> <td>Doesn't hold because: x > y</td> </tr>
+<tr> <td>Compare Universes "x" > "y" Of W.</td> <td>Holds: x > y</td> </tr>
+<tr> <td>Compare Universes "x" >= "y" Of W.</td> <td>Holds because: x > y</td> </tr>
+</table>
+
+
+</div>
+<div class="code">
+
+<br/>
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" &lt; "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" ≤ "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" = "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" &gt; "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" ≥ "y" <span class="id" title="var">Of</span> <span class="id" title="var">W</span>.<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>
