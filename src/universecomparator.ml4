@@ -146,10 +146,10 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
   | Some Univ.Lt ->
      begin
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
-       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " = " uid2)))
+       | (true, _, _, _, _) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " = " uid2))
        | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " < " uid2)))
-       | (_, _, _, true, false) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " >= " uid2)))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (_, _, _, true, false) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " >= " uid2))
+       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, _, false, false, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " < " uid2)))
      end
   | Some Univ.Le ->
@@ -158,7 +158,7 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " = " uid2)))
        | (_, true, false, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " <= " uid2)))
        | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " < " uid2)))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, false, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " <= " uid2)))
      end
   | Some Univ.Eq ->
@@ -166,8 +166,8 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
        | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " = " uid2)))
        | (_, true, _, true, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " <= " uid2) ^ " and " ^ (produce_relation uid1 " >= " uid2)))
-       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " < " uid2)))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (_, _, true, _, _) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " < " uid2))
+       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, _, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " = " uid2)))
      end
   | None ->
