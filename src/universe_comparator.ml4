@@ -80,7 +80,7 @@ let uid_to_u uid =
 	end
     end
 
-let comparator u1 uid1 ord u2 uid2 univs =
+let comparator invert u1 uid1 ord u2 uid2 univs =
   let eq_res =
     Univ.check_constraint univs (u1, Univ.Eq, u2)
   in
@@ -96,33 +96,79 @@ let comparator u1 uid1 ord u2 uid2 univs =
   let inv_lt_res =
     Univ.check_constraint univs (u2, Univ.Lt, u1)
   in
+  let produce_relation fst opr snd (*inverts the relation if necessary *) =
+    if invert then
+      begin
+	let ipor =
+	  if opr = " < " then
+	    begin
+	      " > "
+	    end
+	  else
+	    begin
+	      if opr = " <= " then
+		begin
+		  " >= "
+		end
+	      else
+		begin
+		  if opr = " = " then
+		    begin
+		      " = "
+		    end
+		  else
+		    begin
+		      if opr = " > " then
+			begin
+			  " < "
+			end
+		      else
+			begin
+			  if opr = " >= " then
+			    begin
+			      " <= "
+			    end
+			  else
+			    begin
+			      assert false
+			    end
+			end
+		    end
+		end
+	    end
+	in
+	snd ^ ipor ^ fst
+      end
+    else
+      fst ^ opr ^ snd
+  in
   match ord with
   | Some Univ.Lt ->
      begin
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
-       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ uid1 ^ " = " ^ uid2))
-       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ uid1 ^ " < " ^ uid2))
-       | (_, _, _, true, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ uid1 ^ " >= " ^ uid2))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ uid1 ^ " > " ^ uid2))
-       | (false, _, false, false, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ uid1 ^ " < " ^ uid2))
+       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " = " uid2)))
+       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " < " uid2)))
+       | (_, _, _, true, false) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " >= " uid2)))
+       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (false, _, false, false, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " < " uid2)))
      end
   | Some Univ.Le ->
      begin
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
-       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ uid1 ^ " = " ^ uid2))
-       | (_, true, _, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ uid1 ^ " <= " ^ uid2))
-       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ uid1 ^ " < " ^ uid2))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ uid1 ^ " > " ^ uid2))
-       | (false, false, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ uid1 ^ " <= " ^ uid2))
+       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " = " uid2)))
+       | (_, true, false, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " <= " uid2)))
+       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " < " uid2)))
+       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (false, false, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " <= " uid2)))
      end
   | Some Univ.Eq ->
      begin
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
-       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ uid1 ^ " = " ^ uid2))
-       | (_, true, _, true, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ uid1 ^ " <= " ^ uid2 ^ " and " ^ uid1 ^ " >= " ^ uid2))
-       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Doesn't Hold because: " ^ uid1 ^ " < " ^ uid2))
-       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't Hold because: " ^ uid1 ^ " > " ^ uid2))
-       | (false, _, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ uid1 ^ " = " ^ uid2))
+       | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " = " uid2)))
+       | (_, true, _, true, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " <= " uid2) ^ " and " ^ (produce_relation uid1 " >= " uid2)))
+       | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " < " uid2)))
+       | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2)))
+       | (false, _, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " = " uid2)))
      end
   | None ->
      begin
@@ -136,7 +182,7 @@ let comparator u1 uid1 ord u2 uid2 univs =
        | (false, false, false, false, false) -> Pp.msg_info (Pp.str (uid1 ^ " and " ^ uid2 ^ " are not related"))
      end
     
-let compare_universes uid1 ord uid2 : unit =
+let compare_universes invert uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
   in
@@ -146,9 +192,12 @@ let compare_universes uid1 ord uid2 : unit =
   let univs =
     universes ()
   in
-  comparator u1 uid1 ord u2 uid2 univs
+  if invert then
+    comparator invert u2 uid2 ord u1 uid1 univs
+  else
+    comparator invert u1 uid1 ord u2 uid2 univs
 
-let compare_universes_of id uid1 ord uid2 : unit =
+let compare_universes_of invert id uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
   in
@@ -164,20 +213,23 @@ let compare_universes_of id uid1 ord uid2 : unit =
   let univs =
     Univ.merge_constraints constraints_of_obj_of_scrutiny glob_univs
   in
-  comparator u1 uid1 ord u2 uid2 univs
+  if invert then
+    comparator invert u2 uid2 ord u1 uid1 univs
+  else
+    comparator invert u1 uid1 ord u2 uid2 univs
 	     
 VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
-| [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes uid1 (Some Univ.Lt) uid2 ]
-| [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes uid2 (Some Univ.Lt) uid1 ]
-| [ "Compare" "Universes" string(uid1) "=" string(uid2) ] -> [compare_universes uid1 (Some Univ.Eq) uid2 ]
-| [ "Compare" "Universes" string(uid1) "<=" string(uid2) ] -> [compare_universes uid1 (Some Univ.Le) uid2 ]
-| [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes uid2 (Some Univ.Le) uid1 ]
-| [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes uid1 None uid2 ]
+| [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes false uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes true uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes" string(uid1) "=" string(uid2) ] -> [compare_universes false uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes" string(uid1) "<=" string(uid2) ] -> [compare_universes false uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes true uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes false uid1 None uid2 ]
 							       
-| [ "Compare" "Universes"  string(uid1) "<" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Lt) uid2 ]
-| [ "Compare" "Universes"  string(uid1) ">" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid2 (Some Univ.Lt) uid1 ]
-| [ "Compare" "Universes"  string(uid1) "=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Eq) uid2 ]
-| [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Le) uid2 ]
-| [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid2 (Some Univ.Le) uid1 ]
-| [ "Compare" "Universes"  string(uid1) "?" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 None uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">" string(uid2) "Of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "=" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "Of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "?" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
 END
