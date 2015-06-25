@@ -53,7 +53,7 @@ In this case, one can use 'Compare Universes "Top.3" ? "Top.4" Of PLX' which wil
 
 *)
 
-Compare Universes "Top.3" ? "Top.4" Of PLX.
+Compare Universes "Top.3" ? "Top.4" of PLX.
 
 (**
 
@@ -73,7 +73,7 @@ Here we have bound universe variables of PLX to "x" and "y" in the context of de
 
 *)
 
-Compare Universes "x" ? "y" Of W.
+Compare Universes "x" ? "y" of W.
 
 (**
 
@@ -110,8 +110,8 @@ The following is a table of commands and their outputs:
 
  *)
 
-Compare Universes "x" < "y" Of W.
-Compare Universes "x" <= "y" Of W.
-Compare Universes "x" = "y" Of W.
-Compare Universes "x" > "y" Of W.
-Compare Universes "x" >= "y" Of W.
+Compare Universes "x" < "y" of W.
+Compare Universes "x" <= "y" of W.
+Compare Universes "x" = "y" of W.
+Compare Universes "x" > "y" of W.
+Compare Universes "x" >= "y" of W.
