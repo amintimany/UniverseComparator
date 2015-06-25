@@ -1,6 +1,6 @@
-src/universe_comparator.ml4
-src/universe_comparator.mllib
-theories/universe_comparator.v
+src/universecomparator.ml4
+src/universecomparator.mllib
+theories/UniverseComparator.v
 test-suite/test.v
--R theories universe_comparator
+-R theories UniverseComparator
 -I src
