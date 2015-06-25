@@ -148,15 +148,21 @@ let compare_universes uid1 ord uid2 : unit =
   in
   comparator u1 uid1 ord u2 uid2 univs
 
-let compare_universes_in id uid1 ord uid2 : unit =
+let compare_universes_of id uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
   in
   let u2 =
     uid_to_u uid2
   in
-  let univs =
+  let glob_univs =
     universes ()
+  in
+  let constraints_of_obj_of_scrutiny =
+    Univ.UContext.constraints (universes_of_global (Smartlocate.global_with_alias id))
+  in
+  let univs =
+    Univ.merge_constraints constraints_of_obj_of_scrutiny glob_univs
   in
   comparator u1 uid1 ord u2 uid2 univs
 	     
@@ -168,10 +174,10 @@ VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes uid2 (Some Univ.Le) uid1 ]
 | [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes uid1 None uid2 ]
 							       
-| [ "Compare" "Universes" "In" ident(id) string(uid1) "<" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Lt) uid2 ]
-| [ "Compare" "Universes" "In" ident(id) string(uid1) ">" string(uid2) ] -> [compare_universes_in id uid2 (Some Univ.Lt) uid1 ]
-| [ "Compare" "Universes" "In" ident(id) string(uid1) "=" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Eq) uid2 ]
-| [ "Compare" "Universes" "In" ident(id) string(uid1) "<=" string(uid2) ] -> [compare_universes_in id uid1 (Some Univ.Le) uid2 ]
-| [ "Compare" "Universes" "In" ident(id) string(uid1) ">=" string(uid2) ] -> [compare_universes_in id uid2 (Some Univ.Le) uid1 ]
-| [ "Compare" "Universes" "In" ident(id) string(uid1) "?" string(uid2) ] -> [compare_universes_in id uid1 None uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid2 (Some Univ.Lt) uid1 ]
+| [ "Compare" "Universes"  string(uid1) "=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid2 (Some Univ.Le) uid1 ]
+| [ "Compare" "Universes"  string(uid1) "?" string(uid2) "Of" global(id) ] -> [compare_universes_of id uid1 None uid2 ]
 END
