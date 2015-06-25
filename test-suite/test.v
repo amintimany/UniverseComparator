@@ -1,4 +1,4 @@
-Require Import universe_comparator.universe_comparator.
+Require Import UniverseComparator.UniverseComparator.
 
 Set Printing Universes.
 
@@ -21,7 +21,7 @@ X = Type@{j}
 
 Universe variables in X are global (X is not universe polymorphic). Therefore, 'Compare Universes "i" ? "j"' will output 'Inferred relation: i > j'.
 
-*)
+ *)
 
 Compare Universes "i" ? "j".
 

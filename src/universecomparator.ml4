@@ -1,6 +1,6 @@
 (*i camlp4deps: "grammar/grammar.cma" i*)
 
-DECLARE PLUGIN "universe_comparator"
+DECLARE PLUGIN "universecomparator"
 
 open Names
 open Errors
