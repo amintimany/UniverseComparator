@@ -226,10 +226,10 @@ VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes" string(uid1) ">=" string(uid2) ] -> [compare_universes true uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes" string(uid1) "?" string(uid2) ] -> [compare_universes false uid1 None uid2 ]
 							       
-| [ "Compare" "Universes"  string(uid1) "<" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Lt) uid2 ]
-| [ "Compare" "Universes"  string(uid1) ">" string(uid2) "Of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Lt) uid2 ]
-| [ "Compare" "Universes"  string(uid1) "=" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Eq) uid2 ]
-| [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
-| [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "Of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
-| [ "Compare" "Universes"  string(uid1) "?" string(uid2) "Of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">" string(uid2) "of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Lt) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "=" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Eq) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
+| [ "Compare" "Universes"  string(uid1) "?" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
 END
