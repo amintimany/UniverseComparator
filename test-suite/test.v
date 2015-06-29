@@ -125,7 +125,7 @@ Unset Universe Comparison Error.
 
 Compare Universes "x" < "y" of W.
 
-(*
+(**
 And reenabled by:
 *)
 
