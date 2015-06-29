@@ -115,3 +115,20 @@ Fail Compare Universes "x" <= "y" of W.
 Fail Compare Universes "x" = "y" of W.
 Compare Universes "x" > "y" of W.
 Compare Universes "x" >= "y" of W.
+
+(**
+By default, Compare Unvierses command issues an error if the comparison result doesn't hold.
+This feature can be dissibled by:
+*)
+
+Unset Universe Comparison Error.
+
+Compare Universes "x" < "y" of W.
+
+(*
+And reenabled by:
+*)
+
+Set Universe Comparison Error.
+
+Fail Compare Universes "x" < "y" of W.

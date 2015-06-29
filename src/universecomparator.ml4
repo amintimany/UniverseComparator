@@ -2,6 +2,8 @@
 
 DECLARE PLUGIN "universecomparator"
 
+let issue_errors : bool ref = ref true
+
 open Names
 open Errors
 open Pp
@@ -142,14 +144,20 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
     else
       fst ^ opr ^ snd
   in
+  let issue_error_if_necessary (msg : string) : unit =
+    if !issue_errors then
+      error msg
+    else
+      Pp.msg_info (Pp.str msg)
+  in
   match ord with
   | Some Univ.Lt ->
      begin
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
-       | (true, _, _, _, _) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " = " uid2))
+       | (true, _, _, _, _) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " = " uid2))
        | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " < " uid2)))
-       | (_, _, _, true, false) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " >= " uid2))
-       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
+       | (_, _, _, true, false) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " >= " uid2))
+       | (_, _, _, _, true) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, _, false, false, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " < " uid2)))
      end
   | Some Univ.Le ->
@@ -158,7 +166,7 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " = " uid2)))
        | (_, true, false, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " <= " uid2)))
        | (_, _, true, _, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " < " uid2)))
-       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
+       | (_, _, _, _, true) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, false, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " <= " uid2)))
      end
   | Some Univ.Eq ->
@@ -166,8 +174,8 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        match eq_res, le_res, lt_res, inv_le_res, inv_lt_res with
        | (true, _, _, _, _) -> Pp.msg_info (Pp.str ("Holds: " ^ (produce_relation uid1 " = " uid2)))
        | (_, true, _, true, _) -> Pp.msg_info (Pp.str ("Holds because: " ^ (produce_relation uid1 " <= " uid2) ^ " and " ^ (produce_relation uid1 " >= " uid2)))
-       | (_, _, true, _, _) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " < " uid2))
-       | (_, _, _, _, true) -> error ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
+       | (_, _, true, _, _) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " < " uid2))
+       | (_, _, _, _, true) -> issue_error_if_necessary ("Doesn't hold because: " ^ (produce_relation uid1 " > " uid2))
        | (false, _, false, _, false) -> Pp.msg_info (Pp.str ("Consistent with the theory: " ^ (produce_relation uid1 " = " uid2)))
      end
   | None ->
@@ -232,4 +240,9 @@ VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) "?" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
+END
+
+VERNAC COMMAND EXTEND Unievrse_Error_Mode CLASSIFIED AS QUERY
+| ["Unset" "Universe" "Comparison" "Error"] -> [issue_errors := false]
+| ["Set" "Universe" "Comparison" "Error"] -> [issue_errors := true]
 END
