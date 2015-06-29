@@ -171,6 +171,30 @@ The following is a table of commands and their outputs:
 <span class="id" title="var">Fail</span> <span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" = "y" <span class="id" title="var">of</span> <span class="id" title="var">W</span>.<br/>
 <span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" &gt; "y" <span class="id" title="var">of</span> <span class="id" title="var">W</span>.<br/>
 <span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" ≥ "y" <span class="id" title="var">of</span> <span class="id" title="var">W</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+By default, Compare Unvierses command issues an error if the comparison result doesn't hold.
+This feature can be dissibled by:
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Unset</span> <span class="id" title="var">Universe</span> <span class="id" title="var">Comparison</span> <span class="id" title="var">Error</span>.<br/>
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" &lt; "y" <span class="id" title="var">of</span> <span class="id" title="var">W</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Set</span> <span class="id" title="var">Universe</span> <span class="id" title="var">Comparison</span> <span class="id" title="var">Error</span>.<br/>
+
+<br/>
+<span class="id" title="var">Fail</span> <span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "x" &lt; "y" <span class="id" title="var">of</span> <span class="id" title="var">W</span>.<br/>
 </div>
 </div>
 
