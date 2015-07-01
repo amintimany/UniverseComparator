@@ -2,13 +2,24 @@
 
 DECLARE PLUGIN "universecomparator"
 
-let issue_errors : bool ref = ref true
-
 open Names
 open Errors
 open Pp
 open Nameops
 open Global
+
+let issue_errors : bool ref = ref true
+
+(* Registering the issue_errors option *)
+let _ =
+  Goptions.declare_bool_option
+    { Goptions.optsync  = true;
+      Goptions.optdepr  = false;
+      Goptions.optname  = "universe comparison error";
+      Goptions.optkey   = ["Universe";"Comparison";"Error"];
+      Goptions.optread  = (fun () -> !issue_errors);
+      Goptions.optwrite = (fun b -> issue_errors := b)
+    }
 
 let split (str : string) : string list=
   let rec split_helper (parts : string list) (cur_start : int) (cur : int) : string list =
@@ -34,7 +45,12 @@ let last_rest (l : 'a list) : 'a * ('a list) =
     | h :: t -> last_rest_helper (tmp @ [h]) t
   in
   last_rest_helper [] l
-    
+
+let is_valid_id s =
+  match Unicode.ident_refutation s with
+  | None -> true
+  | _ -> false
+
 let u_of_ulit ulit =
   let (last, rest) =
     last_rest (split ulit)
@@ -70,14 +86,23 @@ let uid_to_u uid =
 	end
       else
 	begin
-	  try
-	    u_of_id (Id.of_string uid)
-	  with
-	    UserError _ as e ->
+	  if is_valid_id uid then
+	    begin
+	      try
+		u_of_id (Id.of_string uid)
+	      with
+		UserError _ as e ->
+		begin
+		  match u_of_ulit uid with
+		  | Some u -> u
+		  | None -> raise e
+		end
+	    end
+	  else
 	    begin
 	      match u_of_ulit uid with
-	      | Some u -> u
-	      | None -> raise e
+		  | Some u -> u
+		  | None -> user_err_loc (Loc.dummy_loc, "Constraint", str "Invalid identifier or universe name " ++ str uid)
 	    end
 	end
     end
@@ -240,9 +265,4 @@ VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) "?" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
-END
-
-VERNAC COMMAND EXTEND Unievrse_Error_Mode CLASSIFIED AS QUERY
-| ["Unset" "Universe" "Comparison" "Error"] -> [issue_errors := false]
-| ["Set" "Universe" "Comparison" "Error"] -> [issue_errors := true]
 END
