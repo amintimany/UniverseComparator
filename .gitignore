@@ -11,6 +11,7 @@
 *.cm[xoias]
 *.cmx[ias]
 Makefile
+src/.merlin
 src/universe_comparator.ml
 src/universe_comparator_mod.ml
 
