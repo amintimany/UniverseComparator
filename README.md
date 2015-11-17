@@ -5,13 +5,16 @@ A plugin for Coq that provides comparison of universe levels. For details of how
 ## Compatibility
 This plugin works with Coq 8.5.
 
+Versions 1.0 and 1.0.1 are compatible with Coq8.5~beta2 and earlier.  
+Version 1.1 is compatible with Coq8.5~beta3.
+
 ## Compile & Install
 You need to have coq_makefile, coqc and ocamlc on the path. To compile use:
 
-``./configure.sh``<br/>
-``make``<br/>
+``./configure.sh``  
+``make``
 
-To install use:<br/>
+To install use:  
 
 ``make install``
 
