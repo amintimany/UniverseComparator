@@ -2,15 +2,27 @@
 
 DECLARE PLUGIN "universecomparator"
 
-let issue_errors : bool ref = ref true
-
 open Names
 open Errors
 open Pp
 open Nameops
 open Global
 
-let split (str : string) : string list=
+let issue_errors : bool ref = ref true
+
+(** Registering the issue_errors option *)
+let _ =
+  Goptions.declare_bool_option
+    { Goptions.optsync  = true;
+      Goptions.optdepr  = false;
+      Goptions.optname  = "universe comparison error";
+      Goptions.optkey   = ["Universe";"Comparison";"Error"];
+      Goptions.optread  = (fun () -> !issue_errors);
+      Goptions.optwrite = (fun b -> issue_errors := b)
+    }
+
+(** Splits a string by dots. *)
+let split_by_dot (str : string) : string list=
   let rec split_helper (parts : string list) (cur_start : int) (cur : int) : string list =
     if (cur < String.length str) then
       begin
@@ -26,6 +38,7 @@ let split (str : string) : string list=
   in
   split_helper [] 0 0
 
+(** Given a list gives the last element of the list and rest of the list (all but last). Raises invalid_arg exception if the list is empty. *)
 let last_rest (l : 'a list) : 'a * ('a list) =
   let rec last_rest_helper (tmp : 'a list) (r : 'a list) =
     match r with
@@ -34,10 +47,18 @@ let last_rest (l : 'a list) : 'a * ('a list) =
     | h :: t -> last_rest_helper (tmp @ [h]) t
   in
   last_rest_helper [] l
-    
+
+(** Uses Coq's identifier library to check if the given string is a valid identifier. *)
+let is_valid_id s =
+  match Unicode.ident_refutation s with
+  | None -> true
+  | _ -> false
+
+(** Creates a universe out of the given literal universe, e.g., "Top.3".
+It returns None if the given string does not conform to the format of literal universe levels.*)
 let u_of_ulit ulit =
   let (last, rest) =
-    last_rest (split ulit)
+    last_rest (split_by_dot ulit)
   in
   try
     let int_last =
@@ -46,7 +67,8 @@ let u_of_ulit ulit =
     Some (Univ.Level.make (DirPath.make (List.map Id.of_string rest)) int_last)
   with
     Failure _ -> None
-	       
+
+(** Creates a universe given an identifier (a string). Generates a Coq error if the given identifier is not a valid universe level. *)
 let u_of_id id =
   begin
     let names, _ =
@@ -57,6 +79,7 @@ let u_of_id id =
       user_err_loc (Loc.dummy_loc, "Constraint", str "Undeclared or invalid universe " ++ pr_id id)
   end
 
+(** Given identifier of a universe creates the universe level. The identifier can be "Set", "Prop", "i" (a declared universe) or of the form "Module.3". *)
 let uid_to_u uid =
   if uid = "Set" then
     begin
@@ -70,18 +93,30 @@ let uid_to_u uid =
 	end
       else
 	begin
-	  try
-	    u_of_id (Id.of_string uid)
-	  with
-	    UserError _ as e ->
+	  if is_valid_id uid then
+	    begin
+	      try
+		u_of_id (Id.of_string uid)
+	      with
+		UserError _ as e ->
+		begin
+		  match u_of_ulit uid with
+		  | Some u -> u
+		  | None -> raise e
+		end
+	    end
+	  else
 	    begin
 	      match u_of_ulit uid with
-	      | Some u -> u
-	      | None -> raise e
+		  | Some u -> u
+		  | None -> user_err_loc (Loc.dummy_loc, "Constraint", str "Invalid identifier or universe name " ++ str uid)
 	    end
 	end
     end
 
+(** Given two universe levels and a set of constraints checks if the constraints stisfy the given order.
+If the order is "?" (represented by None here) it will give the inferred order.
+The result is displayed as a message in Coq IDE or proof general or an error message if issuing errors is enabled. *)
 let comparator invert u1 uid1 ord u2 uid2 univs =
   let eq_res =
     Univ.check_constraint univs (u1, Univ.Eq, u2)
@@ -189,7 +224,8 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Inferred relation: " ^ uid1 ^ " > " ^ uid2))
        | (false, false, false, false, false) -> Pp.msg_info (Pp.str (uid1 ^ " and " ^ uid2 ^ " are not related"))
      end
-    
+
+(** Compares two universes (provided as strings) in the global context. *)
 let compare_universes invert uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
@@ -205,6 +241,29 @@ let compare_universes invert uid1 ord uid2 : unit =
   else
     comparator invert u1 uid1 ord u2 uid2 univs
 
+(** Merges the constraints given to the set of universes (constraint grapgh) given. The reason is that in Coq8.5~Beta3 universes
+should already exist in the graph otherwise an error is issued! *)
+let merge_constraints cnts univs =
+  let safe_add_universe u unvs =
+    try
+      Univ.add_universe u false unvs
+    with
+      Univ.AlreadyDeclared -> unvs
+  in
+  let new_univs =
+    Univ.Constraint.fold
+      begin
+	fun c unvs ->
+	match c with
+	  (l, _, l') ->
+	  safe_add_universe l' (safe_add_universe l unvs)
+      end
+      cnts
+      univs
+  in
+  Univ.merge_constraints cnts new_univs
+
+(** Compares two universes (provided as strings) in the context of a given definition (id argument). *)
 let compare_universes_of invert id uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
@@ -219,13 +278,14 @@ let compare_universes_of invert id uid1 ord uid2 : unit =
     Univ.UContext.constraints (universes_of_global (Smartlocate.global_with_alias id))
   in
   let univs =
-    Univ.merge_constraints constraints_of_obj_of_scrutiny glob_univs
+    merge_constraints constraints_of_obj_of_scrutiny glob_univs
   in
   if invert then
     comparator invert u2 uid2 ord u1 uid1 univs
   else
     comparator invert u1 uid1 ord u2 uid2 univs
-	     
+
+(** Extending the grammar of Coq to except universe comparison queries. *)
 VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes false uid1 (Some Univ.Lt) uid2 ]
 | [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes true uid1 (Some Univ.Lt) uid2 ]
@@ -240,9 +300,4 @@ VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes"  string(uid1) "<=" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) ">=" string(uid2) "of" global(id) ] -> [compare_universes_of true id uid1 (Some Univ.Le) uid2 ]
 | [ "Compare" "Universes"  string(uid1) "?" string(uid2) "of" global(id) ] -> [compare_universes_of false id uid1 None uid2 ]
-END
-
-VERNAC COMMAND EXTEND Unievrse_Error_Mode CLASSIFIED AS QUERY
-| ["Unset" "Universe" "Comparison" "Error"] -> [issue_errors := false]
-| ["Set" "Universe" "Comparison" "Error"] -> [issue_errors := true]
 END

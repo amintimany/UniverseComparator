@@ -41,19 +41,28 @@ Type@{Top.4}
 
 (**
 
-Universe variables in PLX are local (PLX is universe polymorphic). Therefore, 'Compare Universes "Top.3" ? "Top.4"' will output 'Top.3 and Top.4 are not related'.
+As of Coq8.5~Beta3, universe of the form Top.n are not assumed to be all existing anymore.
+Universe variables in PLX are local (PLX is universe polymorphic). Therefore, 'Compare Universes "Top.3" ? "Top.4"' does not make sense and results in an "Anomaly" error. This is because Top.3 and Top.4 do not exist in the global context.
 
+In Coq8.5~beta2 and earlier all universes of the form Top.n were asumed to be existing at all times and so the previous command would have said that the given universe levels are unrelated.
 *)
 
-Compare Universes "Top.3" ? "Top.4".
+(** Compare Universes "Top.3" ? "Top.4". – This causes an "Anomaly" *)
 
 (**
 
 In this case, one can use 'Compare Universes "Top.3" ? "Top.4" Of PLX' which will output 'Inferred relation: Top.3 > Top.4'
 
+Here we have to use 'test.3' and 'test.4' respecitvely for compilation reasons.
+As of Coq8.5~Beta3, coqc and coqtop treat universe neames differently.
+In coqtop anonymous universe levels are of the form Top.n while in coqc, they are of the form
+M.n where M is the name of the module being compiled.
+
+Hence the following command:
+
 *)
 
-Compare Universes "Top.3" ? "Top.4" of PLX.
+Compare Universes "test.3" ? "test.4" of PLX.
 
 (**
 
@@ -71,7 +80,7 @@ Polymorphic Definition W := PLX@{x y}.
 
 Here we have bound universe variables of PLX to "x" and "y" in the context of definition W. Therefore, 'Compare Universes "x" ? "y" Of W' now outputs 'Inferred relation: x > y'.
 
-*)
+ *)
 
 Compare Universes "x" ? "y" of W.
 
