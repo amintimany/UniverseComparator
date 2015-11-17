@@ -10,7 +10,7 @@ open Global
 
 let issue_errors : bool ref = ref true
 
-(* Registering the issue_errors option *)
+(** Registering the issue_errors option *)
 let _ =
   Goptions.declare_bool_option
     { Goptions.optsync  = true;
@@ -20,8 +20,9 @@ let _ =
       Goptions.optread  = (fun () -> !issue_errors);
       Goptions.optwrite = (fun b -> issue_errors := b)
     }
-
-let split (str : string) : string list=
+    
+(** Splits a string by dots. *)
+let split_by_dot (str : string) : string list=
   let rec split_helper (parts : string list) (cur_start : int) (cur : int) : string list =
     if (cur < String.length str) then
       begin
@@ -37,6 +38,7 @@ let split (str : string) : string list=
   in
   split_helper [] 0 0
 
+(** Given a list gives the last element of the list and rest of the list (all but last). Raises invalid_arg exception if the list is empty. *)
 let last_rest (l : 'a list) : 'a * ('a list) =
   let rec last_rest_helper (tmp : 'a list) (r : 'a list) =
     match r with
@@ -46,14 +48,17 @@ let last_rest (l : 'a list) : 'a * ('a list) =
   in
   last_rest_helper [] l
 
+(** Uses Coq's identifier library to check if the given string is a valid identifier. *)
 let is_valid_id s =
   match Unicode.ident_refutation s with
   | None -> true
   | _ -> false
 
+(** Creates a universe out of the given literal universe, e.g., "Top.3".
+It returns None if the given string does not conform to the format of literal universe levels.*)
 let u_of_ulit ulit =
   let (last, rest) =
-    last_rest (split ulit)
+    last_rest (split_by_dot ulit)
   in
   try
     let int_last =
@@ -62,7 +67,8 @@ let u_of_ulit ulit =
     Some (Univ.Level.make (DirPath.make (List.map Id.of_string rest)) int_last)
   with
     Failure _ -> None
-	       
+
+(** Creates a universe given an identifier (a string). Generates a Coq error if the given identifier is not a valid universe level. *)
 let u_of_id id =
   begin
     let names, _ =
@@ -73,6 +79,7 @@ let u_of_id id =
       user_err_loc (Loc.dummy_loc, "Constraint", str "Undeclared or invalid universe " ++ pr_id id)
   end
 
+(** Given identifier of a universe creates the universe level. The identifier can be "Set", "Prop", "i" (a declared universe) or of the form "Module.3". *)
 let uid_to_u uid =
   if uid = "Set" then
     begin
@@ -107,6 +114,9 @@ let uid_to_u uid =
 	end
     end
 
+(** Given two universe levels and a set of constraints checks if the constraints stisfy the given order.
+If the order is "?" (represented by None here) it will give the inferred order.
+The result is displayed as a message in Coq IDE or proof general or an error message if issuing errors is enabled. *)
 let comparator invert u1 uid1 ord u2 uid2 univs =
   let eq_res =
     Univ.check_constraint univs (u1, Univ.Eq, u2)
@@ -214,7 +224,8 @@ let comparator invert u1 uid1 ord u2 uid2 univs =
        | (_, _, _, _, true) -> Pp.msg_info (Pp.str ("Inferred relation: " ^ uid1 ^ " > " ^ uid2))
        | (false, false, false, false, false) -> Pp.msg_info (Pp.str (uid1 ^ " and " ^ uid2 ^ " are not related"))
      end
-    
+
+(** Compares two universes (provided as strings) in the global context. *)
 let compare_universes invert uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
@@ -230,6 +241,7 @@ let compare_universes invert uid1 ord uid2 : unit =
   else
     comparator invert u1 uid1 ord u2 uid2 univs
 
+(** Compares two universes (provided as strings) in the context of a given definition (id argument). *)
 let compare_universes_of invert id uid1 ord uid2 : unit =
   let u1 =
     uid_to_u uid1
@@ -250,7 +262,8 @@ let compare_universes_of invert id uid1 ord uid2 : unit =
     comparator invert u2 uid2 ord u1 uid1 univs
   else
     comparator invert u1 uid1 ord u2 uid2 univs
-	     
+
+(** Extending the grammar of Coq to except universe comparison queries. *)
 VERNAC COMMAND EXTEND Compare_Universes CLASSIFIED AS QUERY
 | [ "Compare" "Universes" string(uid1) "<" string(uid2) ] -> [compare_universes false uid1 (Some Univ.Lt) uid2 ]
 | [ "Compare" "Universes" string(uid1) ">" string(uid2) ] -> [compare_universes true uid1 (Some Univ.Lt) uid2 ]
