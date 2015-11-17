@@ -20,7 +20,7 @@ let _ =
       Goptions.optread  = (fun () -> !issue_errors);
       Goptions.optwrite = (fun b -> issue_errors := b)
     }
-    
+
 (** Splits a string by dots. *)
 let split_by_dot (str : string) : string list=
   let rec split_helper (parts : string list) (cur_start : int) (cur : int) : string list =
@@ -241,6 +241,28 @@ let compare_universes invert uid1 ord uid2 : unit =
   else
     comparator invert u1 uid1 ord u2 uid2 univs
 
+(** Merges the constraints given to the set of universes (constraint grapgh) given. The reason is that in Coq8.5~Beta3 universes
+should already exist in the graph otherwise an error is issued! *)
+let merge_constraints cnts univs =
+  let safe_add_universe u unvs =
+    try
+      Univ.add_universe u false unvs
+    with
+      Univ.AlreadyDeclared -> unvs
+  in
+  let new_univs =
+    Univ.Constraint.fold
+      begin
+	fun c unvs ->
+	match c with
+	  (l, _, l') ->
+	  safe_add_universe l' (safe_add_universe l unvs)
+      end
+      cnts
+      univs
+  in
+  Univ.merge_constraints cnts new_univs
+
 (** Compares two universes (provided as strings) in the context of a given definition (id argument). *)
 let compare_universes_of invert id uid1 ord uid2 : unit =
   let u1 =
@@ -256,7 +278,7 @@ let compare_universes_of invert id uid1 ord uid2 : unit =
     Univ.UContext.constraints (universes_of_global (Smartlocate.global_with_alias id))
   in
   let univs =
-    Univ.merge_constraints constraints_of_obj_of_scrutiny glob_univs
+    merge_constraints constraints_of_obj_of_scrutiny glob_univs
   in
   if invert then
     comparator invert u2 uid2 ord u1 uid1 univs
