@@ -62,33 +62,7 @@ Universe variables in X are global (X is not universe polymorphic). Therefore, '
 
 <div class="paragraph"> </div>
 
-As of Coq8.5~Beta3, universe of the form Top.n are not assumed to be all existing anymore.
-Universe variables in PLX are local (PLX is universe polymorphic). Therefore, 'Compare Universes "Top.3" ? "Top.4"' does not make sense and results in an "Anomaly" error. This is because Top.3 and Top.4 do not exist in the global context.
-
-<div class="paragraph"> </div>
-
-In Coq8.5~beta2 and earlier all universes of the form Top.n were asumed to be existing at all times and so the previous command would have said that the given universe levels are unrelated.
-
-<div class="paragraph"> </div>
-
- Compare Universes "Top.3" ? "Top.4". – This causes an "Anomaly" 
-<div class="paragraph"> </div>
-
-
-<div class="paragraph"> </div>
-
-In this case, one can use 'Compare Universes "Top.3" ? "Top.4" Of PLX' which will output 'Inferred relation: Top.3 &gt; Top.4'
-
-<div class="paragraph"> </div>
-
-Here we have to use 'test.3' and 'test.4' respecitvely for compilation reasons.
-As of Coq8.5~Beta3, coqc and coqtop treat universe neames differently.
-In coqtop anonymous universe levels are of the form Top.n while in coqc, they are of the form
-M.n where M is the name of the module being compiled.
-
-<div class="paragraph"> </div>
-
-Hence the following command:
+Universe variables in PLX are local (PLX is universe polymorphic). Therefore, 'Compare Universes "Top.3" ? "Top.4"' will output 'Top.3 and Top.4 are not related'.
 
 <div class="paragraph"> </div>
 
@@ -97,7 +71,25 @@ Hence the following command:
 <div class="code">
 
 <br/>
-<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "test.3" ? "test.4" <span class="id" title="var">of</span> <span class="id" title="var">PLX</span>.<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "Top.3" ? "Top.4".<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+
+<div class="paragraph"> </div>
+
+In this case, one can use 'Compare Universes "Top.3" ? "Top.4" Of PLX' which will output 'Inferred relation: Top.3 &gt; Top.4'
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="var">Compare</span> <span class="id" title="keyword">Universes</span> "Top.3" ? "Top.4" <span class="id" title="var">of</span> <span class="id" title="var">PLX</span>.<br/>
 
 <br/>
 </div>
@@ -135,7 +127,7 @@ Here we have bound universe variables of PLX to "x" and "y" in the context of de
 
 <div class="paragraph"> </div>
 
- 
+
 </div>
 <div class="code">
 
