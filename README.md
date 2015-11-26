@@ -9,8 +9,17 @@ Versions 1.0 and 1.0.1 are compatible with Coq8.5~beta2 and earlier.
 For the documentation of UniverseComparator 1.0.1 see https://amintimany.github.io/UniverseComparator/older_versions/v1.0.1/html/test.html  
 Version 1.1 is compatible with Coq8.5~beta3.
 
-## Compile & Install
-You need to have coq_makefile, coqc and ocamlc on the path. To compile use:
+## Install with OPAM
+Add the OPAM repository:
+
+    opam repo add coq-released https://coq.inria.fr/opam/released
+
+and run:
+
+    opam install coq-universe-comparator
+
+## Install from source
+You need to have `coq_makefile`, `coqc` and `ocamlc` on the path. To compile use:
 
 ``./configure.sh``  
 ``make``
